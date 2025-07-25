@@ -3,13 +3,11 @@
 import streamlit as st
 import requests
 import pandas as pd
-import openai
-from typing import List
+from openai import OpenAI
 from datetime import datetime
 
 # --- Configuration ---
-openai.api_key = st.secrets["OPENAI_API_KEY"]
-DATA_URL = "https://data.europa.eu/data/datasets/competition-merger-control-decisions?format=csv"
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # --- App Layout ---
 st.set_page_config(page_title="Case Compass", layout="wide")
@@ -23,7 +21,7 @@ search_query = st.sidebar.text_input("Search Case Title or Parties")
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_csv("https://raw.githubusercontent.com/openstate/case-compass/main/merger_cases_sample.csv")
+        df = pd.read_csv("https://raw.githubusercontent.com/openstate/case-compass/main/sample_data.csv")
     except:
         df = pd.read_csv("sample_data.csv")  # fallback
     df['Year'] = pd.to_datetime(df['Date'], errors='coerce').dt.year
@@ -45,17 +43,17 @@ st.subheader("Ask a Legal Question")
 user_question = st.text_area("Ask a question based on EU merger decisions:")
 
 if st.button("Get Answer") and user_question:
-    # Sample prompt: RAG to be added later
+    # Sample prompt
     prompt = f"""
     You are a legal assistant trained on EU Commission merger control decisions. Answer the question below ONLY using known Commission practices and publicly available merger cases.
-    
+
     Question: {user_question}
 
     If applicable, cite relevant decisions by case number or title.
     """
 
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a legal expert on EU competition law."},
@@ -64,7 +62,7 @@ if st.button("Get Answer") and user_question:
             temperature=0.2,
             max_tokens=800
         )
-        answer = response['choices'][0]['message']['content']
+        answer = response.choices[0].message.content
         st.markdown("### Answer")
         st.write(answer)
     except Exception as e:
