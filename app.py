@@ -54,7 +54,7 @@ if st.button("Get Answer") and user_question:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a legal expert on EU competition law."},
                 {"role": "user", "content": prompt}
